@@ -144,10 +144,11 @@ export function ShinyButton({ children, onClick, className = "" }: ShinyButtonPr
         }
 
         .shiny-cta span::before {
-          --size: calc(100% + 1rem);
+          --size: calc(100% + 3rem);
           width: var(--size);
           height: var(--size);
           box-shadow: inset 0 -1ex 2rem 4px var(--shiny-cta-highlight);
+          border-radius: 9999px;
           opacity: 0;
           transition: opacity var(--transition);
           animation: calc(var(--duration) * 1.5) breathe linear infinite;

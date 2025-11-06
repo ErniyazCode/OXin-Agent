@@ -19,12 +19,12 @@ export function GradientBlur({
 }: GradientBlurProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const mouseRef = useRef({ x: 0, y: 0 })
+  const prevMouseRef = useRef({ x: 0, y: 0 })
   const circsRef = useRef<
     Array<{
       col: [number, number, number]
       x: number
       y: number
-      grdblur: CanvasGradient
       alpha: number
     }>
   >([])
@@ -47,6 +47,15 @@ export function GradientBlur({
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
+    // Отключаем на мобильных устройствах для лучшей производительности
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768
+    if (isMobile) {
+      // На мобильных просто рисуем пустой canvas
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
+      return
+    }
+
     const resizeCanvas = () => {
       canvas.width = window.innerWidth
       canvas.height = window.innerHeight
@@ -64,33 +73,46 @@ export function GradientBlur({
 
       ctx.globalCompositeOperation = "lighter"
 
-      const obj = {
-        col: getColor(),
-        x: mouseRef.current.x,
-        y: mouseRef.current.y,
-        grdblur: ctx.createRadialGradient(
-          mouseRef.current.x,
-          mouseRef.current.y,
-          0,
-          mouseRef.current.x,
-          mouseRef.current.y,
-          radius,
-        ),
-        alpha: 1,
+      // Создаем след - новые точки только при движении мыши
+      const dx = mouseRef.current.x - prevMouseRef.current.x
+      const dy = mouseRef.current.y - prevMouseRef.current.y
+      const distance = Math.sqrt(dx * dx + dy * dy)
+      
+      // Создаем точки следа через небольшие интервалы при движении
+      if (distance > 3) {
+        const obj = {
+          col: getColor(),
+          x: mouseRef.current.x,
+          y: mouseRef.current.y,
+          alpha: 0.8, // Немного меньше для следа
+        }
+        circsRef.current.push(obj)
+        
+        prevMouseRef.current.x = mouseRef.current.x
+        prevMouseRef.current.y = mouseRef.current.y
       }
-      circsRef.current.push(obj)
 
+      // Рисуем все точки следа (которые затухают)
       const toRemove: number[] = []
       for (let i = 0; i < circsRef.current.length; i++) {
         const circ = circsRef.current[i]
 
-        circ.grdblur.addColorStop(0, `rgba(${circ.col[0]},${circ.col[1]},${circ.col[2]},0.95)`)
-        circ.grdblur.addColorStop(0.2, `rgba(${circ.col[0]},${circ.col[1]},${circ.col[2]},0.7)`)
-        circ.grdblur.addColorStop(0.5, `rgba(${circ.col[0]},${circ.col[1]},${circ.col[2]},0.3)`)
-        circ.grdblur.addColorStop(1, `rgba(${circ.col[0]},${circ.col[1]},${circ.col[2]},0)`)
+        // Создаем градиент для каждой точки при отрисовке
+        const grdblur = ctx.createRadialGradient(
+          circ.x,
+          circ.y,
+          0,
+          circ.x,
+          circ.y,
+          radius,
+        )
+        grdblur.addColorStop(0, `rgba(${circ.col[0]},${circ.col[1]},${circ.col[2]},0.95)`)
+        grdblur.addColorStop(0.2, `rgba(${circ.col[0]},${circ.col[1]},${circ.col[2]},0.7)`)
+        grdblur.addColorStop(0.5, `rgba(${circ.col[0]},${circ.col[1]},${circ.col[2]},0.3)`)
+        grdblur.addColorStop(1, `rgba(${circ.col[0]},${circ.col[1]},${circ.col[2]},0)`)
 
         ctx.beginPath()
-        ctx.fillStyle = circ.grdblur
+        ctx.fillStyle = grdblur
         ctx.globalAlpha = circ.alpha
         ctx.arc(circ.x, circ.y, radius, 0, Math.PI * 2)
         ctx.fill()
@@ -103,6 +125,27 @@ export function GradientBlur({
         circsRef.current.splice(toRemove[i], 1)
       }
 
+      // Рисуем основное постоянное свечение под курсором (не затухает)
+      const mainGlow = ctx.createRadialGradient(
+        mouseRef.current.x,
+        mouseRef.current.y,
+        0,
+        mouseRef.current.x,
+        mouseRef.current.y,
+        radius,
+      )
+      const mainColor = getColor()
+      mainGlow.addColorStop(0, `rgba(${mainColor[0]},${mainColor[1]},${mainColor[2]},0.95)`)
+      mainGlow.addColorStop(0.2, `rgba(${mainColor[0]},${mainColor[1]},${mainColor[2]},0.7)`)
+      mainGlow.addColorStop(0.5, `rgba(${mainColor[0]},${mainColor[1]},${mainColor[2]},0.3)`)
+      mainGlow.addColorStop(1, `rgba(${mainColor[0]},${mainColor[1]},${mainColor[2]},0)`)
+      
+      ctx.beginPath()
+      ctx.fillStyle = mainGlow
+      ctx.globalAlpha = 1
+      ctx.arc(mouseRef.current.x, mouseRef.current.y, radius, 0, Math.PI * 2)
+      ctx.fill()
+
       ctx.globalAlpha = 1
       requestAnimationFrame(draw)
     }
@@ -113,13 +156,13 @@ export function GradientBlur({
     }
 
     const handleTouchMove = (e: TouchEvent) => {
-      e.preventDefault()
+      // Убираем preventDefault чтобы не блокировать скролл на мобильных
       mouseRef.current.x = e.touches[0].clientX
       mouseRef.current.y = e.touches[0].clientY
     }
 
     window.addEventListener("mousemove", handleMouseMove)
-    window.addEventListener("touchmove", handleTouchMove, { passive: false })
+    window.addEventListener("touchmove", handleTouchMove, { passive: true })
     window.addEventListener("resize", resizeCanvas)
 
     draw()

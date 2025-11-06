@@ -86,14 +86,14 @@ export const Timeline = ({ data, heading, description, className }: TimelineProp
           >
             <div className="sticky top-40 z-40 flex max-w-xs flex-col items-center self-start md:w-full md:max-w-sm md:flex-row">
               <div className="absolute left-3 h-10 w-10 rounded-full bg-background/90 shadow-[0_12px_30px_rgba(5,10,25,0.55)] md:left-3" />
-              <div className="absolute left-5 h-6 w-6 rounded-full border border-white/20 bg-white/10 md:left-5" />
-              <h3 className="hidden text-4xl font-semibold tracking-tight text-white/40 md:block md:pl-16">
+              <div className="absolute left-5 h-6 w-6 rounded-full border-2 border-emerald-400/80 bg-emerald-400/30 shadow-[0_0_20px_rgba(52,211,153,0.4)] md:left-5" />
+              <h3 className="hidden text-4xl font-semibold tracking-tight text-white/90 md:block md:pl-16">
                 {item.title}
               </h3>
             </div>
 
             <div className="relative w-full pl-20 pr-4 md:pl-4">
-              <h3 className="mb-4 block text-2xl font-semibold tracking-tight text-white/60 md:hidden">{item.title}</h3>
+              <h3 className="mb-4 block text-2xl font-semibold tracking-tight text-white/90 md:hidden">{item.title}</h3>
               {item.content}
             </div>
           </motion.div>

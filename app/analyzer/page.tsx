@@ -15,8 +15,7 @@ import Image, { type StaticImageData } from "next/image"
 import metamaskIcon from "@/scr/walletIcon/metamask.png"
 import coinbaseIcon from "@/scr/walletIcon/coinbase.jpg"
 import trustWalletIcon from "@/scr/walletIcon/trustwallet.jpg"
-import TwitterIcon from "@/scr/logoSocial/twitter.png"
-import DexScreenerIcon from "@/scr/logoSocial/dexscanner.png"
+import TwitterIcon from "@/scr/logoSocial/twitter.jpg"
 import { usePhantomWallet } from "@/hooks/use-phantom-wallet"
 
 interface Token {
@@ -244,8 +243,8 @@ export default function AnalyzerPage() {
   return (
     <>
       <WebGLShader />
-  <div className="fixed inset-0 pointer-events-none z-100">
-        <GradientBlur radius={25} opacityDecay={0.03} color={[64, 224, 208]} />
+  <div className="fixed inset-0 pointer-events-none z-100 hidden md:block">
+        <GradientBlur radius={12} opacityDecay={0.03} color={[64, 224, 208]} />
       </div>
 
       <div className="min-h-screen relative">
@@ -1019,19 +1018,6 @@ export default function AnalyzerPage() {
                     width={TwitterIcon.width}
                     height={TwitterIcon.height}
                     className="h-8 w-8 transition-transform duration-200 hover:scale-105"
-                  />
-                </Link>
-                <Link
-                  href="#"
-                  aria-label="DexScreener"
-                  className="group inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 transition duration-200 hover:bg-white/20"
-                >
-                  <Image
-                    src={DexScreenerIcon}
-                    alt="DexScreener logo"
-                    width={DexScreenerIcon.width}
-                    height={DexScreenerIcon.height}
-                    className="h-6 w-6 transition-transform duration-200 group-hover:scale-105"
                   />
                 </Link>
               </div>
