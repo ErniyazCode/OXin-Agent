@@ -1,0 +1,596 @@
+
+🏰 What is SolanaStreaming?
+SolanaStreaming is a Solana development platform offering a fast websocket api, tools and developer support.
+
+Websocket API
+The websocket api offers real time data streaming with minimal delay. It sends parsed transaction data for events such as swaps and new token trading pairs.
+
+Open the websocket test console or view the websocket api docs to get started
+
+Socials
+Follow us on our socials to stay up to date with the latest news and updates.
+
+Discord
+X.com
+Github
+Reddit
+
+
+What is the websocket api?
+The solanastreaming.com websocket api is primarily used for streaming data from the solana chain in real-time through a websocket. This api is for anyone wanting to gain real-time insight into things happening on the solana blockchain such as new raydium pairs created & swap notifications about price changes. We parse the blockchain data into more meaningful events like swaps and pairs, removing the legwork of manual parsing.
+
+Key Highlights
+Minimal lag: We listen to multiple grpc nodes, selecting the fastest for each event ensuring you're synced as fast as possible.
+Easy Setup: Get connected in seconds with many example code snippets.
+Cost Effective: Much cheaper than the next leading Solana brand for streaming all real-time data.
+Developer Friendly: Get the data in plain JSON format. Easy to read and inspect.
+The api can be accessed instantly by signing up for an api key in the dashboard.
+
+All data is retrieved from the solana chain at commitment level confirmed. This allows for a fast response time but with reasonable confidence on being included in the chain. See more about commitment levels here
+
+Get started by following one of our connection guides
+
+Supported Dexs
+Currently we support the following DEXs for new pairs and swaps:
+
+Pump.fun
+Raydium V4
+Raydium CPMM
+Pumpswap
+
+Use Cases
+Listen for new token trading pairs created on the solana chain
+Listen for new pumpfun tokens
+Listen for swap notifications for token price changes
+Listen for swap notifications for automated market maker price changes
+Listen for swap notifications for any whale transaction above a certian amount
+Listen for swaps from specified wallet addresses
+Listen to all swaps to evalulate market trends
+
+❌ Errors
+Errors can be returned from calling any method or in the middle of a subscription. The id param is returned when possible so you can associate the error with the method call. There are exceptions to this such as a parse error.
+
+Please Note:
+Its a good idea to build in logic to reconnect to the websocket in case of connection failure.
+Response Fields
+code
+signed integer
+The error code as a signed integer. These mostly follow the jsonrpc spec.
+Values
+-32700	Parse error
+-32600	Invalid request
+-32601	Method not found
+-32602	Invalid params
+-32603	Internal error
+-32000	Subscribe error
+-32001	Limit error - When you exceed the subscription limits
+message
+string
+A more detailed message about the error.
+Internal Buffer Overflow Error
+You may receive this error if you aren't processing the events fast enough. Usually you will notice long before this happens as your event latency (time behind chain) will build up over 60 seconds. You have a few options to resolve this error:
+
+Ensure your code can process the messages faster.
+Reduce the amount of data you receive by providing a filter on the subscribe request.
+Pass the allowDrops param (boolean) as true to the subscription. Under normal operation, messages are not deleted or dropped in your subscription, however setting this will cause random events to be dropped so you can retain the subscription. It is not reccomended to enable this as you will miss out on vital data. This is only intended to be used for testing purposes, or whilst you fix an issue with your receiver.
+Error Examples
+{
+    "id": 1,
+    "result": null,
+    "error": {
+        "code": -32000,
+        "message": "Message limit reached for endpoint newPair. Please upgrade for unlimited messages."
+    }
+}
+{
+    "id": 0,
+    "result": null,
+    "error": {
+        "code": -32700,
+        "message": "cant parse message"
+    }
+}
+{
+    "id": 1,
+    "result": null,
+    "error": {
+        "code": -32601,
+        "message": "method not found"
+    }
+}
+© 2025 SolanaStreaming. All rights reserved.
+
+
+// npm install ws
+const WebSocket = require('ws');
+ 
+(async function () {
+    // Connect
+    const ws = new WebSocket('wss://api.solanastreaming.com/', undefined,
+        {
+            headers: {
+                'X-API-KEY': 'a5026d4582d4b58f6cbcc4354685f830'
+            }
+        }
+    );
+    ws.on('error', console.error);
+    ws.on('open', () => {
+        // Start the pair / price stream
+        ws.send('{"id":1,"method":"newPairSubscribe","include_pumpfun": true}');
+    });
+    ws.on('message', (data) => {
+        // Continuously read pairs / prices
+        console.log('received: %s', data);
+    });
+})();
+
+newPairSubscribe
+Subscribe to receive notifications when a new token pair is created with wSol.
+
+Notifications may arrive out of order. E.g. If multiple pairs are created in a block, the first pair created isn't guarenteed to be returned first in the subscription.
+
+It is strongly suggested you use the blockTime to calculate the notification latency to ensure the data is the most recent available.
+It uses commitment level confirmed which allows for a fast response time with reasonable confidence on being included in the blockchain. See more about commitment levels here
+
+Known Issue
+For most pairs / launch tokens, if the pair contains wSOL, it will force this to be the quote token (which it usually is anyway). For some pairs, this means the quote and base will be swapped. We are working to address the best possible way forward as the chain does not always report which token is the base/quote.
+
+See Supported DEXs
+
+Subscriptions to newPairs are limited to 1 per connection.
+
+Request Parameters
+include_pumpfun
+boolean
+Set to true to include new pumpfun pairs. false by default
+Response Fields
+subscription_id
+unsigned integer
+The subscription id which can be used to unsubscribe and associate websocket messages with the subscription.
+Request Example
+{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "newPairSubscribe",
+    "params": {
+        "include_pumpfun": true
+    }
+}
+Response Example
+{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+        "subscription_id": 1
+    }
+}
+newPairNotification
+These are the notifications you will receive when newPairSubscribe is called successfully. Notifications do not typically conform to jsonrpc.
+
+Notification Fields
+subscription_id
+unsigned integer
+The subscription id which was returned when creating the subscription. This can be used to unsubscribe with the newPairUnsubscribe method.
+method
+string
+The name of the notification.
+params
+newPairObject
+newPairObject
+slot
+unsigned integer
+The slot of the transaction that created the new pair.
+signature
+string
+The signature of the transaction that created the new pair.
+blockTime
+unsigned integer
+The time the block was confirmed in the unix seconds timestamp format. This will match the blocktime in solscan.
+pair
+pairObject
+pairObject
+sourceExchange
+string
+The name of the exchange the pair is located.
+Supported values: raydium, pumpswap, pumpfun
+ammAccount
+string
+The account of the amm. This is the same as the dexscreener pair address. For Pumpfun tokens, this is the bondingCurve account.
+baseToken
+tokenObject
+quoteToken
+tokenObject
+The quote token is usually wrapped sol (wSol).
+baseTokenLiquidityAdded
+string
+The amount of base token liquidity added to the pool upon creation. This is a bigint but formatted as a string for json compatibility. It is the raw amount.
+quoteTokenLiquidityAdded
+string
+The amount of quote token liquidity added to the pool upon creation. This is a bigint but formatted as a string for json compatibility. It is the raw amount. The quote token is usually wrapped sol (wSol). E.g. a value of "12000000000" raw wSol with 9 decimals would format to be 12 wSol.
+migration
+string | null
+The name of the exchange the pair was migrated from. (This only happens once per token)
+Supported values: pumpfun
+tokenObject
+account
+string
+The base58 address as a string for the token.
+info
+tokenInfoObject | null
+Contains extra information about the token. Null if could not be retrieved.
+tokenInfoObject
+decimals
+unsigned integer
+The number of decimals for this token.
+supply
+string
+The raw amount of supply for this token formatted as a string.
+metadata
+tokenMetadataObject | null
+Contains token metadata which is stored at a different chain address. Null if the data is not available.
+mintAuthority
+string | null
+The base58 address of the mint authority if this token has one. Null if the token doesnt have a mint authority.
+freezeAuthority
+string | null
+The base58 address of the freeze authority if this token has one. Null if the token doesnt have a freeze authority.
+tokenMetadataObject
+name
+string
+The name of the token.
+symbol
+string
+The symbol of the token.
+logo
+string | null
+The url of the logo for the token. This is a third party url so the image could take any format. Only visit external links like these with caution. Null if no logo is available.
+Notification Example
+{
+    "slot": 301578636,
+    "signature": "UWnvRXCHpmDxb9tQAYYEEoY8r2JVZ3CcbDLpsFp8EGBdv5njjyEkGXhYxcFCc7Y68X15SWrfve4rycvM4vGRJh7",
+    "blockTime": 1731688226,
+    "pair": {
+        "sourceExchange": "raydium",
+        "ammAccount": "CDnqCfvxQvncrWpoTT36xBCcthzQyh8RumuvoFsFZNVC",
+        "baseToken": {
+            "account": "G9GZaVRPiYRfNQF7oqNoeXKwB5jFbLSHe5fxLcCpump",
+            "info": {
+                "decimals": 9,
+                "supply": "206900000000000000",
+                "metadata": {
+                    "name": "randomcoin",
+                    "symbol": "randomcoin",
+                    "logo": "https://arweave.net/xDf9sPlSY4SMmFQzyCK-xakNl-m7a17lKPO6BttSO3M"
+                },
+                "mintAuthority": null,
+                "freezeAuthority": null
+            }
+        },
+        "quoteToken": {
+            "account": "So11111111111111111111111111111111111111112",
+            "info": null
+        },
+        "baseTokenLiquidityAdded": "206900000000000000",
+        "quoteTokenLiquidityAdded": "630000000000"
+    }
+}
+© 2025 SolanaStreaming. All rights reserved.
+
+swapSubscribe
+Subscribe to receive notifications when a new transaction containing a swap is confirmed on the solana chain that alters the price of any Supported pair with wrapped sol.
+
+Notifications may arrive out of order.
+
+It is strongly suggested you use the blockTime and slot to calculate the notification latency to ensure the data is the most recent available.
+It uses commitment level confirmed which allows for a fast response time with reasonable confidence on being included in the blockchain. See more about commitment levels here
+
+See Supported DEXs
+
+Please note: Although unlikely, some events may be missed due to transient network issues or a swap on chain not following the conventional format.
+
+Subscriptions to swaps are limited to 1 per connection.
+
+DISCLAIMER: We cannot guarantee 100% accuracy and/or delivery of the data. Please do your own checks. SolanaStreaming is not responsible for any misuse or financial losses as a result of using this data.
+
+Request Parameters
+All parameters can also be updated at a later time using the updateSubscriptionParams method.
+
+include
+includeFilterObject
+An include filter object. Depending on your subscription level, this may be required.
+At least one of the sub fields in includeFilterObject is required when supplying this filter.
+This filter operates as an "OR" filter. This means if you supply more than one param in this filter, e.g. you supply two accounts, it will return the data for both accounts.
+includeFilterObject
+ammAccount (optional)
+array(string)
+Case Sensitive
+An array of strings containing base58 encoded accounts. This is the account of the automated market maker. This is the same as the dexscreener pair address.
+walletAccount (optional)
+array(string)
+Case Sensitive
+An array of strings containing base58 encoded accounts. This is the account of the swap beneficiary. This is useful if you want to follow a wallets swap activities.
+baseTokenMint (optional)
+array(string)
+Case Sensitive
+Use caution with this filter as pools with little liquidity can drastically impact the quotePrice of the swap. This filter tracks the token across any liquidity pool. It is reccomended to use ammAccount instead.
+An array of strings containing base58 encoded accounts. These are the mints of the tokens you want to filter by.
+usdValue (optional)
+unsigned integer
+The minimum usd value of the swap that caused the price to change. This is limited to a minimum of 10,000 USD. This can be useful for discovering whale transactions.
+Response Fields
+subscription_id
+unsigned integer
+The subscription id which can be used to unsubscribe and associate websocket messages with the subscription.
+Request Examples
+Subscribe to all swaps for a set of trading pairs.
+
+{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "swapSubscribe",
+    "params": {
+        "include": {
+            "ammAccount": [
+                "58fzJMbX5PatnfJPqWWsqkVFPRKptkbb5r2vCw4Qq3z9",
+                "F59abNFXebqyMioXWgM4mXMw896wNtP9d4gSe4yo5wx3"
+            ]
+        }
+    }
+}
+Subscribe to all swaps for a certian wallet account.
+
+{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "swapSubscribe",
+    "params": {
+        "include": {
+            "walletAccount": [
+                "E1wid5KyTfkzxWDUmhxhJTKZqVRR4N6kyuTLXB5bPiU"
+            ]
+        }
+    }
+}
+Subscribe to all swaps where the value is higher than 10,000 USD.
+
+{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "swapSubscribe",
+    "params": {
+        "include": {
+            "usdValue": 10000
+        }
+    }
+}
+Response Example
+{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+        "subscription_id": 1
+    }
+}
+swapNotification
+These are the notifications you will receive when swapSubscribe is called successfully. Notifications do not typically conform to jsonrpc.
+
+Notification Fields
+subscription_id
+unsigned integer
+The subscription id which was returned when creating the subscription. This can be used to unsubscribe with the newPairUnsubscribe method.
+method
+string
+The name of the notification.
+params
+newSwapObject
+newSwapObject
+slot
+unsigned integer
+The slot of the transaction that created the new pair.
+signature
+string
+The signature of the transaction that created the new pair.
+blockTime
+unsigned integer
+The time the block was confirmed in the unix seconds timestamp format. This will match the blocktime in solscan.
+swap
+swapObject
+swapObject
+sourceExchange
+string
+The name of the exchange the pair is located.
+Supported values: raydium, pumpswap, pumpfun
+ammAccount
+string
+The account of the amm. This is the same as the dexscreener pair address. For Pumpfun tokens, this is the bondingCurve account.
+baseTokenMint
+string
+The mint of the base token in the pair as a base58 string.
+quoteTokenMint
+string
+The mint of the quote token in the pair as a base58 string. This is normally wsol. For Pumpfun tokens, this is populated as wSol for consistency. Pumpfun uses SOL but has the same price.
+walletAccount
+string
+The account that receives the result of the swap that isnt the amm as a base58 string.
+quotePrice
+string
+This is the price paid by this transaction represented in the quoteToken which means the price is often in wSol (execution price). This field is calculated as the quoteAmount divided by the baseAmount. This does not take into account any fees.
+This is a float encoded as a string as some tokens can have very small prices that are not typically represented as a float. It can take the form of an e notation, e.g. 4.665456971e-06 which equates to 0.000004665456971
+usdValue
+float64
+The approximate USD value of the swap that caused the price to change.
+baseAmount
+string
+The raw amount of baseTokenMint that was swapped.
+swapType
+enum
+From the perspective of the walletAccount, whether they were buying baseTokenMint or selling it. Supported values: buy, sell
+quoteTokenLiquidity Beta
+string
+This field is in beta testing which means it is subject to change. The raw amount of quoteToken in the liquidity pool after the swap. This field is not always available and can be an empty string for concentrated liquidity pools. When the swap involves a launch token/pool, the field represents the real quote or SOL reserves rather than the virtual reserves. This field reflects the value at the end of the transaction, regardless of how many swaps executed within the transaction.
+Notification Example
+{
+    "slot": 315256016,
+    "signature": "2BpJTsumysXzfX7BZS8u3o8xaZUdov3QGSijfB9asBfWowsRuvGwFY88FqaeWZzbywHobTE5uvDPzcV4LnaGdAbX",
+    "blockTime": 1737393555,
+    "swap": {
+        "ammAccount": "CDHWtKhraDWyp57B2bp7DM5DwHGiyRD8f6n5sKKR7VWo",
+        "baseTokenMint": "BwyMeGp9kqCQ7zYn1mEj5REkMFKZhRRHfCEJ8eqcmoon",
+        "quoteTokenMint": "So11111111111111111111111111111111111111112",
+        "walletAccount": "5S2fWgsbzqTTGVkUUrk83iH17h9T8C5ojYxhrDUWbg6L",
+        "quotePrice": "4.665456971e-06",
+        "usdValue": 466.04,
+        "baseAmount": "398674773250",
+        "swapType": "buy"
+    }
+}
+© 2025 SolanaStreaming. All rights reserved.
+
+latestBlockSubscribe
+Subscribe to receive notifications on the latest block SolanaStreaming has processed.
+
+This is useful for determining how up to date our node is and for basic connection checking.
+
+All plans can receive an unlimited number of messages from this subscription.
+
+Subscriptions are limited to 1 per connection.
+
+Request Parameters
+None
+Response Fields
+subscription_id
+unsigned integer
+The subscription id which can be used to unsubscribe and associate websocket messages with the subscription.
+Request Example
+{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "latestBlockSubscribe"
+}
+Response Example
+{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+        "subscription_id": 1
+    }
+}
+latestBlockNotification
+These are the notifications you will receive when latestBlockSubscribe is called successfully. Notifications do not typically conform to jsonrpc.
+
+Notification Fields
+subscription_id
+unsigned integer
+The subscription id which was returned when creating the subscription. This can be used to unsubscribe with the newPairUnsubscribe method.
+method
+string
+The name of the notification.
+params
+latestBlockObject
+latestBlockObject
+block
+unsigned integer
+The number of the block that has been processed by SolanaStreaming.
+blockTime
+unsigned integer
+The unix timestamp of the associated block.
+Notification Example
+{
+    "block": 323424580,
+    "blockTime": 1740655743
+}
+© 2025 SolanaStreaming. All rights reserved.
+
+updateSubscriptionParams
+Update the parameters supplied to a currently active subscription. This is commonly used to update the filters on the priceUpdated subscription.
+
+This method will reset all of the parameters of the subscription with the supplied parameters.
+
+Request Parameters
+subscription_id
+unsigned integer
+The subscription id of the active subscription you want to update the parameters of.
+update
+multiple
+The update object is used to contain the new parameters for the subscription. The structure is the same as the parameters listed on the subscribe documentation page. E.g. for swapSubscribe, this should contain a filter object.
+Response Fields
+<boolean>
+boolean
+True when params have been successfully updated.
+Request Example
+{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "updateSubscriptionParams",
+    "params": {
+        "subscription_id": 1,
+        "update":{
+            "include": {
+                "walletAccount": [
+                    "E1wid5KyTfkzxWDUmhxhJTKZqVRR4N6kyuTLXB5bPiU"
+                ]
+            }
+        }
+    }
+}
+Response Example
+{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": true
+}
+© 2025 SolanaStreaming. All rights reserved.
+
+ewPairUnsubscribe
+Unsubscribes from a previous subscription started with newPairSubscribe
+
+Request Parameters
+subscription_id
+unsigned integer
+The subscription id which was returned when newPairSubscribe was called.
+Response Fields
+<boolean>
+boolean
+True when successfully unsubscribed. You will no longer receive notifications associated with this subscription.
+Request Example
+{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "newPairUnsubscribe",
+    "params": {
+        "subscription_id": 1
+    }
+}
+Response Example
+{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": true
+}
+
+latestBlockUnsubscribe
+Unsubscribes from a previous subscription started with latestBlockSubscribe
+
+Request Parameters
+subscription_id
+unsigned integer
+The subscription id which was returned when latestBlockSubscribe was called.
+Response Fields
+<boolean>
+boolean
+True when successfully unsubscribed. You will no longer receive notifications associated with this subscription.
+Request Example
+{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "latestBlockUnsubscribe",
+    "params": {
+        "subscription_id": 1
+    }
+}
+Response Example
+{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": true
+}

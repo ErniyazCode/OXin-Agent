@@ -1,0 +1,964 @@
+Welcome to GetBlock.io! We make it easy for developers and businesses to connect to 50+ blockchain networks.
+
+With our tools and services, you can focus on building your Web3 project without worrying about the technical details of setting up and managing blockchain nodes.
+
+From DeFi apps and NFT platforms to analytics tools, AppChains, and more, GetBlock provides the infrastructure to help you build, test, and scale your blockchain-powered solutions.
+
+Core GetBlock features
+Plug-and-Play access
+
+Our ready-to-use blockchain nodes and APIs help you get started immediately.
+
+99.9% uptime
+Reliable 24/7 connection to multiple blockchain networks.
+
+Multi-chain support
+
+Connect to Bitcoin, Ethereum, BNB Chain, Polygon, Solana, TON, and 50+ other networks. (And we support new protocols before anyone else!)
+
+Flexible plans
+
+From free access to enterprise-grade solutions, we’ve got options for every stage of your project.
+
+Custom solutions
+
+Need something unique? We can build tailored solutions for your specific blockchain needs.
+
+24/7 Expert support
+
+Our team is here to help with integrations, troubleshooting, and scaling.
+
+Creating node endpoints
+Follow the steps below to set up an endpoint and generate access tokens for your project.
+
+This short guide shows you how to create an RPC endpoint (an RPC URL) for any supported protocol in your GetBlock Shared Node dashboard to connect it to your app, script, or wallet.
+
+In GetBlock, an endpoint URL includes your unique Access Token — the credential that authenticates RPC requests. GetBlock’s UI sometimes labels the whole endpoint provisioning flow “Get Access Token” because a new RPC URL is created together with the token.
+
+Related:
+
+Access token management
+
+GetBlock Deploys Major Security Upgrade: Introducing Access Tokens
+
+The steps below cover how to generate a new endpoint URL with an Access Token:
+
+Log in to your GetBlock account and navigate to the Dashboard
+
+Find the Endpoints section on the Dashboard
+
+Click Get endpoint to open the endpoint setup menu
+
+GetBlock RPC endpoint setup interface
+In the modal that opens, select:
+
+The desired blockchain protocol (Ethereum, BNB Chain, Polygon, etc.)
+
+The network you want to interact with: mainnet or testnet
+
+Node mode: full (default) or archive
+
+The API interface that you need (JSON-RPC, WebSockets, GraphQL, etc.)
+
+One of the available server locations (Frankfurt, New York, or Singapore)
+
+How to create a node endpoint for blockchain API access
+Click 'Get' and have the endpoint URL with an access token generated.
+
+Generate and add as many access tokens as required for this protocol. Each token is a unique endpoint for you and your application to interact with the blockchain.
+
+All GetBlock endpoints follow a predictable format. The visible difference is the hostname reflecting the region selected during the setup.
+
+Endpoint examples:
+
+
+Copy
+EU (Frankfurt):   https://go.getblock.io/<ACCESS_TOKEN>/
+US (New York):    https://go.getblock.us/<ACCESS_TOKEN>/
+Asia (Singapore): https://go.getblock.asia/<ACCESS_TOKEN>/
+The token encodes the protocol, networks, and routing on the server — clients don’t need to specify a chain in the URL.
+
+Full vs Archive mode
+When creating an endpoint in your GetBlock Dashboard, for select protocols, you can choose between two node access modes – Full and Archive. This selection determines how much historical blockchain data your endpoint can access.\
+
+Full mode: Standard full (pruned) node behavior — current state lookups, sending transactions, reading blocks, etc.
+
+Archive mode: Enables access to the historical chain state. Useful for querying balances, contract storage, UTXO sets, executing historical calls, simulating transactions at a past block, or reconstructing chain state for analytics and audits.
+
+Selecting the Archive mode for an endpoint changes how requests are billed in Compute Units (CU). Learn more in the Archive mode guide.
+
+Viewing and managing endpoints
+The created URL is shown on the endpoints list so you can copy it and start calling the node. Use the right-side menu () to roll (regenerate) or delete the endpoint from the list.
+
+Blockchain RPC nodes list within the GetBlock account
+Because the Access Token is embedded, the URL is the credential. Keep it secret and store securely. If the URL is exposed, regenerate or revoke it from your GetBlock account.
+
+Enabling archive mode
+Enable Archive Mode on your GetBlock Shared Node API to access the full blockchain history and run historical queries
+
+GetBlock provides direct access to blockchain historical states through both the Dedicated Nodes service and archive-enabled Shared RPC endpoints.
+
+This page covers Archive Mode – a setting that turns on archive-node access within GetBlock’s Shared Nodes subscription.
+
+Common RPC use cases enabled by Archive Mode:
+
+Read contract/account state at any past block, not just latest , using methods like eth_getBalance(address, blockNumber), eth_getStorageAt(contract, slot, blockNumber), eth_getCode(address, blockNumber), etc.
+
+Call view functions against historical state: e.g. eth_call(..., blockNumber).
+
+Run historical queries and debugging that rely on old state: forensics, audits, explorers, indexing, and retroactive analytics.
+
+Support tracing and higher-fidelity debugging that may require historical state.
+
+This feature removes the need to run a dedicated archive infrastructure for some use cases, letting developers perform on-demand historical queries via GetBlock RPC API.
+
+Archive mode availability & coverage
+Archive functionality is included with all Shared Node subscriptions, excluding the Free plan. No additional fee required.
+
+Archive support is provided for a set of popular protocol mainnets, including Ethereum, BSC, Polygon, Base, Arbitrum, TRON, Sui, Cardano, etc.
+
+Look for the small history icon ( history/clock icon ) when picking a protocol during the endpoint setup. It indicates that Archive mode is available for that blockchain.
+
+Archive blockchain data access via GetBlock RPC endpoints
+If you need an archive data for a chain not covered by shared Archive mode, request a Dedicated Node. Dedicated Nodes can be deployed in archive mode for any supported blockchain and come with additional benefits like:
+
+Full blockchain history at the highest throughput
+
+Unlimited query capacity
+
+Custom node builds & tooling
+
+How to enable the Archive mode
+Sign in to your GetBlock dashboard and make sure you’re on the Shared Node tab.
+
+Click Get endpoint and choose a required blockchain protocol.
+
+Get RPC endpoint button on GetBlock's dashboard
+Find the Mode toggle and switch the Archive mode on.
+
+
+Finish configuring endpoint details by choosing the API interface and server location as usual.
+
+After clicking Get, the new Archive endpoint appears in your Endpoints list. The endpoint URLs will follow the existing GetBlock format but point to archive nodes.
+
+CU billing for Shared Archive endpoints
+Archive endpoints usage remains subject to your plan’s CU limits and performance characteristics.
+
+However, serving requests from archive infrastructure involves heavier storage and compute power compared to regular full nodes.
+
+Therefore, enabling the Archive mode affects how CU usage is calculated:
+
+GetBlock applies a 2× Compute Unit (CU) multiplier to all requests made through the Archive endpoint.
+
+The multiplier is applied to all requests made to an archive endpoint, even if the invoked RPC call does not require a historical state.
+
+You can review the per-chain CU values for each method on our Compute Units page.
+
+Example:
+
+If eth_getBalance costs 20 CU on a standard shared endpoint for a given chain, the same call to an Archive-enabled shared endpoint will cost 40 CU.
+
+Plan accordingly and consider using standard Full mode endpoints for non-archive traffic to avoid unnecessary CU consumption.
+
+Best practices
+Use archive endpoints only for workloads that require a historical state. For transactions or current state queries, use a standard Full mode to save CU.
+
+Monitor CU consumption on the dashboard and set alerts for spikes or when usage nears your plan limit.
+
+If you run sustained, high-volume archive queries, consider using a Dedicated Node.
+
+💬 Need help with archive blockchain data?
+Tell us what you’re building — our team can guide you to the most efficient archive node setup.
+
+Configuring dedicated nodes
+Configure dedicated nodes in your GetBlock Dashboard. This guide covers customizing your node settings and completing the setup process.
+
+To create a dedicated node endpoint, switch over to the ‘Dedicated Nodes’ tab in the Dashboard.
+
+How to set up a private blockchain node
+Switching to Dedicated nodes setup
+Select a blockchain protocol you wish to deploy and the network type. Click Get to begin the setup process.
+
+GetBlock dedicated node deployment tool
+In the setup window:
+
+Review and confirm your selected protocol and network.
+
+Customize your dedicated node with the following options:
+
+Region of deployment: Germany (Frankfurt), USA (New York), Singapore.
+
+Select a subscription plan (available discounts are applied automatically)
+
+Node type: Choose between Full Node or Archive Node.
+
+Node client: Specify your preferred node implementation.
+
+Performance tier: Choose between High (premium specs, max throughput) and Standard (enterprise specs, optimized pricing for moderate-high loads).
+
+API interface: Select API options and add-ons if applicable.
+
+Verify all selected configurations in the summary section and proceed to checkout.
+
+Pay for your dedicated nodes via your GetBlock account. If additional support is required during setup, you can contact the GetBlock support team directly.
+
+Configuring your private blockchain node server
+Configuring your private node
+You can add more dedicated nodes following these steps. Once deployed, add as many access tokens for each dedicated node as you need.
+
+Previous
+Enabling archive mode
+Next
+Dedicated node performance tiers
+Last updated 5 days ago
+
+Dedicated node performance tiers
+GetBlock’s Dedicated Nodes are available in two performance tiers – High and Standard. Choose the right balance of performance and cost for your private infrastructure
+
+Dedicated Nodes are fully private blockchain nodes deployed and managed for your team. With two distinct performance presets, you can balance throughput, SLA, and budget to fit your workload.
+
+Available tiers:
+
+High Performance Tier: Designed to provide maximum available resources, throughput, and reliability. It is intended for applications where performance and availability are critical. The focus is on delivering the highest service levels and supporting the most demanding production workloads.
+
+Standard Performance Tier: Designed to offer enterprise-grade performance sufficient for the majority of professional and business use cases, but at a more cost-efficient level. It targets demanding business applications and sustained usage, but without the additional (and sometimes excessive) headroom reserved for High Performance tier.
+
+By providing these options, GetBlock helps you to deploy Dedicated Nodes that are tailored to your application’s technical, operational, and budget requirements.
+
+Dedicated Node tiers overview
+When deploying a Dedicated Node, you can choose between High and Standard setups to align with your application’s resource needs and expected workload.
+
+Select High if your workload is latency-sensitive, demands very high concurrent throughput, or is critical to business continuity.
+
+Select Standard for typical production apps, where workload is within supported performance bounds.
+
+Configuring tiers is available for all supported protocols unless there are specific infrastructure limitations for a given network. In this case, a chain will only support a single tier.
+
+Always check available configurations in your dashboard
+
+High vs Standard tier comparison table
+Resource allocation
+
+Maximum hardware and bandwidth
+
+Balanced hardware profile
+
+Throughput
+
+Highest supported
+
+High
+
+SLA
+
+99.9% uptime
+
+99.5% uptime
+
+Recommended for
+
+Applications with high transaction volumes & large user bases, mission-critical systems, and any workflow where latency and throughput are the top priority
+
+Most production dApps, wallets, and enterprise tools or projects that need guaranteed resources but do not require the maximum performance tier
+
+Dedicated Node pricing
+Dedicated Nodes are billed at a set monthly rate determined by configured settings:
+
+Performance tier: Total cost scales with the performance tier selected – High tier is priced at a premium relative to the Standard tier.
+
+Blockchain network: Each protocol has different hardware requirements, which impact both High and Standard tier pricing.
+
+Node mode: Full or Archive.
+
+Client parameters.
+
+Refer to your Dashboard for up-to-date pricing details and protocol-specific options.
+
+Monthly costs are always shown during configuration in the Dashboard for each supported network and region.
+
+GetBlock private node configuration tool with pricing
+Dedicated Node pricing in the GetBlock Dashboard
+Steps to configure dedicated node tiers
+To select a tier during node setup, open the Dedicated Node dashboard:
+
+Select protocol, network, deployment region, node mode, and a preferred client.
+
+As a final step, choose the Performance Tier (High or Standard) and required API interfaces.
+
+Setting up a Dedicated Node performance tier via GetBlock dashboard
+Review updated performance and pricing details.
+
+Your dedicated node will be ready for use upon activation. To switch between tiers after deploying, reach out to support.
+
+Need a more customized setup?
+For advanced workloads or unique requirements, our engineering team can help craft a custom private node solution beyond the High/Standard presets. Contact us for tailored deployments.
+
+Previous
+Configuring dedicated nodes
+Next
+
+Using GetBlock configuration files
+GetBlock’s configuration file provides a more organized and flexible way to interact with blockchain nodes and networks without exposing sensitive API keys or credentials in the code.
+
+How to make HTTP requests with curl using JSON config file
+Using GetBlock’s JSON configuration file with curl is particularly helpful when you need to access various node endpoints without hardcoding API keys in the code:
+
+Download the getblock.config.json file from your GetBlock account;
+
+Make sure you have jq installed. jq is a versatile command-line tool that enables extracting values from JSON files;
+
+Navigate to your workspace or directory where you have imported the getblock.config.json file and open a terminal;
+
+Now, you can make a GET request to a selected node endpoint using the curl command:
+
+
+Copy
+curl -X GET https://go.getblock.io/"$(jq -r '.shared.btc.mainnet.rest[0]' getblock.config.json)"/rest/chaininfo.json
+How to use GetBlock’s JavaScript config with Web3.js
+Connect to Ethereum nodes and other EVM-compatible networks using web3.js and GetBlock’s JS configuration file.
+
+Make sure the web3.js library is added to your project. In order to do that, use one of the following methods:
+
+Npm: npm install web3
+
+Yarn: yarn add web3
+
+Pure js link: dist/web3.min.js
+
+Download the getblock.config.js file from your GetBlock account. Add this file to your project directory.
+
+Import the getblock module to a .js file that configures a new Web3 instance:
+
+
+Copy
+const { getblock } = require('./getblock.config.js');
+Connect to an Ethereum node and start sending API calls using web3.js over HTTP or WebSocket in the format below:
+
+
+Copy
+const { getblock } = require('./getblock.config.js');
+var Web3 = require('web3');
+
+// Create the JSON-RPC provider
+var web3Rpc = new Web3(new Web3.providers.HttpProvider(
+        getblock.shared.eth.mainnet.rpc[0].go()
+));
+
+// Create the WebSocket provider
+var web3Ws = new Web3.providers.WebsocketProvider(
+        `wss://go.getblock.io/${getblock.shared.eth.mainnet.ws[0].token()}`
+));
+Use go() method to access an entire endpoint or token() to fetch the token.
+
+How to use the JS config with Hardhat
+Set up GetBlock’s JS config file in Hardhat following the steps below:
+
+Ensure you have Hardhat installed as a dependency in your Node.js project or run the following command to do so:
+
+
+Copy
+npm install --save-dev hardhat
+Navigate to your GetBlock account and install the getblock.config.js file. Copy and paste it into your working directory;
+
+Open the hardhat.config.js file from your project directory and import the getblock module:
+
+
+Copy
+const { getblock } = require('./getblock.config.js');
+To set up GetBlock as a provider, modify the Hardhat configuration file with the credentials as shown below. Use go() method to access an entire endpoint or token() to fetch the token only.
+
+
+Copy
+const { getblock } = require('./getblock.config.js'); 
+
+module.exports = {
+  defaultNetwork: "sepolia",
+  networks: {
+    hardhat: {
+    },
+    sepolia: {
+      url: getblock.shared.eth.sepolia.rpc[0].go() // https://go.getblock.io/<ACCESS-TOKEN>/
+    },
+    goerli: {
+      url: `https://go.getblock.io/${getblock.shared.eth.goerli.rpc[0].token()}` // <ACCESS-TOKEN>
+    },
+  },
+  solidity: {
+    version: "0.8.19",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200
+      }
+    }
+  },
+  paths: {
+    sources: "./contracts",
+    tests: "./test",
+    cache: "./cache",
+    artifacts: "./artifacts"
+  },
+  mocha: {
+    timeout: 40000
+  }
+}
+
+Using cURL for testing
+These examples provide a starting point for testing your connection and querying blockchain data using cURL commands.
+
+Before you start:
+
+Create a JSON-RPC endpoint for the Ethereum blockchain from your GetBlock account.
+
+Replace <ACCESS_TOKEN> in the examples below with your actual Access Token.
+
+Fetch the current block number
+Run the following command to retrieve the latest block number:
+
+
+Copy
+curl --location --request POST 'https://go.getblock.io/<ACCESS_TOKEN>/' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "jsonrpc": "2.0",
+    "method": "eth_blockNumber",
+    "params": [],
+    "id": "getblock.io"
+}'
+If successful, the response will include the current block number in hexadecimal value:
+
+
+Copy
+{
+    "jsonrpc": "2.0",
+    "id": "getblock.io",
+    "result": "0x1449641"
+}
+Get the chain ID
+Identify the blockchain network with the eth_chainId method:
+
+
+Copy
+curl --location --request POST 'https://go.getblock.io/<ACCESS_TOKEN>/' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "jsonrpc": "2.0",
+    "method": "eth_chainId",
+    "params": [],
+    "id": "getblock.io"
+}'
+Response example:
+
+
+Copy
+{
+  "jsonrpc": "2.0",
+  "id": "getblock.io",
+  "result": "0x1"
+}
+In this example, 0x1 indicates the Ethereum Mainnet. The chain ID helps confirm which blockchain network you are interacting with.
+
+Check account balance by address
+Retrieve the balance of an Ethereum address using eth_getBalance. Replace <ACCOUNT_ADDRESS> with the target wallet address:
+
+
+Copy
+curl --location --request POST 'https://go.getblock.io/<ACCESS_TOKEN>/' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "jsonrpc": "2.0",
+    "method": "eth_getBalance",
+    "params": ["<ACCOUNT_ADDRESS>", "latest"],
+    "id": "getblock.io"
+}'
+Example response:
+
+
+Copy
+{
+    "jsonrpc": "2.0",
+    "id": "getblock.io",
+    "result": "0x5a70dac3910910"
+}
+The result field shows the account balance in wei (1 ether = 10¹⁸ wei).
+
+Postman Collection
+Download the Postman GetBlock’s collection to test our service. It includes all the accessible endpoints of our nodes and ready-to-go examples.
+
+Import the collection into your Postman workspace: https://documenter.getpostman.com/view/28751185/2s9YRDzqcX.
+
+Once the page loads, you'll find a 'Run in Postman' button in the top-right corner. Click this button to open the collection directly in your Postman application.
+
+Select the desired network from the drop-down list on the sidebar.
+
+Paste the access token copied from your account instead of {YOUR_ACCESS_TOKEN}.
+
+Using Postman Collection for Ethereum JSON-RPC request
+Using Postman to send a JSON-RPC request to an Ethereum node via GetBlock
+This token will grant you the necessary permissions to explore our node functionalities.
+
+Errors and troubleshooting
+This page provides a guide to common JSON-RPC and HTTP errors when testing your connection with GetBlock's API.
+
+Connection issues
+Code
+Error message
+Solution
+401
+
+Access denied
+
+Double-check that <ACCESS_TOKEN> is correctly replaced with your actual token. Ensure there are no trailing spaces.
+
+404
+
+Could not resolve host
+
+Verify that the URL https://go.getblock.io/<ACCESS_TOKEN>/ is correct.
+
+429
+
+Too many requests
+
+Check your GetBlock account for usage limits. Upgrade your plan if necessary.
+
+JSON-RPC errors
+Code
+Error message
+Solution
+32601
+
+The method does not exist/is not available
+
+Verify the method name (eth_blockNumber, eth_getBalance, etc.) against the blockchain's JSON-RPC specifications.
+
+32602
+
+Invalid argument
+
+Ensure the parameters in the params array match the expected format for the method.
+
+32700
+
+Parse error
+
+Double-check your JSON syntax. Ensure your request is properly formatted.
+
+Web3.js integration
+Learn how to use Web3.js, a widely-used JavaScript library for connecting to GetBlock nodes.
+
+Web3.js is a JavaScript library built for interacting with the Ethereum blockchain and other EVM-compatible chains. It is used to send JSON-RPC calls to the Ethereum node via HTTP, IPC, or WebSocket connection to read data from the blockchain, make transactions, or deploy smart contracts.
+
+Install Web3.js
+Use your preferred package manager:
+
+npm:
+
+
+Copy
+npm install web3
+yarn:
+
+
+Copy
+yarn add web3
+Pure js link:
+
+
+Copy
+dist/web3.min.js
+Set up your connection to GetBlock
+
+Copy
+// Import the Web3 library
+const Web3 = require('web3');
+
+// Set GetBlock as the provider (replace ACCESS_TOKEN with your actual token)
+var web3 = new Web3('https://go.getblock.io/ACCESS_TOKEN');
+
+// Initialize web3 method
+web3.eth.getBlockNumber().then(console.log);
+
+How to generate accounts and send transactions
+This guide explains how GetBlock users can connect to blockchain nodes to create accounts and send transactions.
+
+In blockchains, ‘account’ should be referred to as a pair of private and public keys. Blockchains ‘recognize’ their users and balances by these keypairs.
+
+Unlike login/password pairs in traditional computational solutions, in modern blockchains, every account can be restored with a private key only.
+
+So, to broadcast transactions to a decentralized network, we need first to create (or restore) our account. The whole set of interactions is organized via Web3.js library.
+
+Creating accounts
+First, initialize the Web3.js library and set up the connection to a blockchain node:
+
+
+Copy
+const Web3 = require('web3');
+
+//Set up the provider (replace ACCESS-TOKEN with your actual token)
+const web3 = new Web3('https://go.getblock.io/<ACCESS-TOKEN>/');
+Next, we can create an account on the BNB Smart Chain testnet:
+
+
+Copy
+// Generate new address and private key
+const accountTo = web3.eth.accounts.create();
+console.log('Generated account:', accountTo);
+We can also restore an account from an existing private key:
+
+
+Copy
+// Restore account from private key
+const privateKey = process.env['privateKey'];
+const accountFrom = web3.eth.accounts.privateKeyToAccount(privateKey);
+You may ask what does ‘eth’ mean when we’re interacting with BNB Chain? No mistake, it reflects the fact that BNB Smart Chain is fully compatible with Ethereum Virtual Machine.
+
+Sending transactions
+In blockchains, transactions should be signed (authorized) to be ‘included’ into blockchains (confirmed by its consensus of miners or validators).
+
+Here’s how our transactions are created. 0.01 ETH is used for demo.
+
+
+Copy
+const createSignedTx = async (rawTx) => {
+rawTx.gas = await web3.eth.estimateGas(rawTx);
+return await accountFrom.signTransaction(rawTx);
+}
+
+const sendSignedTx = async (signedTx) => {
+// You can use signedTx.rawTransaction as params for
+// calling eth_sendRawTransaction JSON-RPC method
+web3.eth.sendSignedTransaction(signedTx.rawTransaction).then(
+console.log
+);
+}
+
+const amountTo = "0.01" // ether
+That’s how the transaction looks before being included in the blockchain. Once signed, it can be sent to the network of nodes.
+
+
+Copy
+const rawTx = {
+to: accountTo.address,
+value: web3.utils.toWei(amountTo, 'ether'),
+chainId: chainId
+};
+
+createSignedTx(rawTx).then(sendSignedTx)
+
+Solana (SOL)
+GetBlock Solana RPC API documentation: JSON-RPC reference, WebSocket subscriptions, and connection guides for mainnet & devnet endpoints
+
+GetBlock provides RPC endpoints that implement the Solana JSON-RPC API standard. These methods are core functionalities for interacting with Solana nodes, enabling seamless integration with the Solana blockchain.
+
+Overview of Solana Network Methods
+The Solana network offers a comprehensive suite of methods that enable developers to interact seamlessly with its blockchain infrastructure. This overview provides an in-depth examination of these methods, categorizing them into key functional areas for better understanding and implementation.
+
+What you can expect to find in this documentation:
+
+Compatibility with the Solana mainnet and testnets
+
+Purpose, functionality, and use cases of each Solana method
+
+Required input parameters
+
+Sample requests and responses
+
+Code examples in multiple programming languages (Python, JavaScript)
+
+What you can do with this API:
+
+Query real-time blockchain data
+
+Manage and monitor accounts and balances
+
+Interact with smart contracts
+
+Submit and track transactions
+
+Monitor network activity in real-time
+
+To effectively use the Solana methods listed above, you'll need a reliable tool to send requests to the network. One such tool is Axios, a lightweight and widely used HTTP client. With Axios, you can easily interact with Solana's JSON-RPC API to execute transactions, retrieve blockchain data, and much more.
+
+Quickstart with Axios
+Axios is a powerful HTTP client that streamlines communication with APIs, including Solana's JSON-RPC interface. By using Axios, developers can effortlessly send requests and process responses, making blockchain integration straightforward and efficient. Below, we provide a detailed guide to help you get started:
+
+Set Up Your Project
+
+Choose a package manager and initialize your project:
+
+
+Copy
+mkdir solana-api-quickstart
+cd solana-api-quickstart
+npm init --yes
+Or, using Yarn:
+
+
+Copy
+mkdir solana-api-quickstart
+cd solana-api-quickstart
+yarn init -y
+Install Axios
+
+Install Axios to make API requests:
+
+
+Copy
+npm install axios
+Or, using Yarn:
+
+
+Copy
+yarn add axios
+Make Your First Request
+
+Set up a new file named index.js and insert the code snippet provided below:
+
+
+Copy
+import axios from "axios";
+
+const url = `https://go.getblock.io/<ACCESS-TOKEN>/`;
+const payload = {
+  jsonrpc: '2.0',
+  id: 1,
+  method: 'getBalance',
+  params: ['<ACCOUNT-PUBKEY>']
+};
+
+axios.post(url, payload)
+  .then(response => {
+    console.log('Account balance:', response.data.result.value);
+  })
+  .catch(error => {
+    console.error(error);
+  });
+Replace <ACCESS-TOKEN> with your actual API key from GetBlock, and <ACCOUNT-PUBKEY> with the public key of the account you wish to query.
+
+Run Your Script
+
+Execute your script with:
+
+
+Copy
+node index.js
+You should see the account balance logged to your console.
+
+Quickstart with Python and requests
+requests is a powerful and easy-to-use HTTP library for Python that simplifies API interactions, including Solana’s JSON-RPC API. With requests, developers can send requests, handle responses, and easily integrate blockchain functionality into their projects. Here’s a step-by-step guide to get started:
+
+Set Up Your Project
+
+Create a new directory for your project and navigate into it:
+
+
+Copy
+mkdir solana-api-quickstart
+cd solana-api-quickstart
+Set up a virtual environment to isolate dependencies:
+
+
+Copy
+python -m venv venv
+source venv/bin/activate  # On Windows, use venv\Scripts\activate
+Install the requests library:
+
+
+Copy
+pip install requests
+Write Your First Script
+
+Create a new file called main.py and insert the following code:
+
+
+Copy
+import requests
+
+# Replace <ACCESS-TOKEN> with your actual API key from GetBlock
+url = "https://go.getblock.io/<ACCESS-TOKEN>/"
+
+# Create a JSON-RPC payload
+payload = {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "getBalance",
+    "params": ["<ACCOUNT-PUBKEY>"]
+}
+
+headers = {
+    "Content-Type": "application/json"
+}
+
+try:
+    # Send the POST request
+    response = requests.post(url, json=payload, headers=headers)
+    response.raise_for_status()  # Check for HTTP errors
+    data = response.json()
+
+    # Print the account balance
+    balance = data["result"]["value"]
+    print(f"Account balance: {balance}")
+except requests.exceptions.RequestException as e:
+    print(f"An error occurred: {e}")
+except KeyError:
+    print("Unexpected response format:", response.text)
+Replace <ACCESS-TOKEN> with your actual API key from GetBlock, and <ACCOUNT-PUBKEY> with the public key of the account you wish to query.
+
+Run Your Script
+
+Execute the script with:
+
+
+Copy
+python main.py
+You should see the account balance retrieved from the Solana network printed to your console.
+
+Network & Node Info
+getClusterNodes
+
+getHealth
+
+getVersion
+
+getIdentity
+
+getGenesisHash
+
+Block & Slot Info
+getBlock
+
+getBlockCommitment
+
+getBlockHeight
+
+getBlockProduction
+
+getBlocks
+
+getBlocksWithLimit
+
+getBlockTime
+
+getFirstAvailableBlock
+
+getHighestSnapshotSlot
+
+getSlot
+
+getSlotLeader
+
+getSlotLeaders
+
+minimumLedgerSlot
+
+Account Management
+getAccountInfo
+
+getMultipleAccounts
+
+getProgramAccounts
+
+getTokenAccountBalance
+
+getTokenAccountsByDelegate
+
+getTokenAccountsByOwner
+
+getTokenLargestAccounts
+
+getTokenSupply
+
+getMinimumBalanceForRentExemption
+
+requestAirdrop
+
+getBalance
+
+Transactions
+sendTransaction
+
+simulateTransaction
+
+getTransaction
+
+getTransactionCount
+
+getSignatureStatuses
+
+getSignaturesForAddress
+
+getFeeForMessage
+
+getLatestBlockhash
+
+isBlockhashValid
+
+Epoch & Stake
+getEpochInfo
+
+getEpochSchedule
+
+getInflationGovernor
+
+getInflationRate
+
+getInflationReward
+
+getLeaderSchedule
+
+getStakeMinimumDelegation
+
+Performance & Supply
+getRecentPerformanceSamples
+
+getRecentPrioritizationFees
+
+getSupply
+
+Governance / Validators
+getVoteAccounts
+
+Subscriptions (WebSocket Only)
+accountSubscribe
+
+accountUnsubscribe
+
+blockSubscribe
+
+blockUnsubscribe
+
+logsSubscribe
+
+logsUnsubscribe
+
+programSubscribe
+
+programUnsubscribe
+
+rootSubscribe
+
+rootUnsubscribe
+
+signatureSubscribe
+
+signatureUnsubscribe
+
+slotSubscribe
+
+slotUnsubscribe
+
+slotsUpdatesSubscribe
+
+slotsUpdatesUnsubscribe
+
+voteSubscribe
+
+voteUnsubscr
+
+Conclusion
+Solana’s JSON-RPC API offers a fast and efficient way to interact with the network—whether you're managing accounts, sending transactions, or tracking real-time data.
+
+Grouped by functionality, the methods cover everything needed to build scalable Web3 applications with ease. With HTTP and WebSocket support, and tools like Axios and requests, integration is simple for developers of all levels.
+
+Start building today and explore Solana’s full capabilities.
