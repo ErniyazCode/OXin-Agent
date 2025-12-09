@@ -342,6 +342,11 @@
     animation: gradient-x 3s ease infinite;
   }
 
+  .animate-gradient {
+    background-size: 200% auto;
+    animation: gradient-x 4s ease infinite;
+  }
+
   /* Added custom scrollbar styles for analysis text */
   .custom-scrollbar::-webkit-scrollbar {
     width: 8px;

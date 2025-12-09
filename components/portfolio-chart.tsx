@@ -83,8 +83,8 @@ export function PortfolioChart({ tokens, totalValue }: PortfolioChartProps) {
   }
 
   return (
-    <div className="h-[400px]">
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="h-[400px] w-full relative">
+      <ResponsiveContainer width="100%" height={400}>
         <PieChart>
           <Pie
             data={displayData}

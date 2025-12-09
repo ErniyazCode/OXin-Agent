@@ -12,9 +12,11 @@ import {
 } from "@/components/ui/placeholders-and-vanish-input"
 import { GradientBlur } from "@/components/ui/gradient-blur"
 import { WebGLShader } from "@/components/ui/web-gl-shader"
+import { StatusBadge } from "@/components/ui/status-badge"
 import { usePhantomWallet } from "@/hooks/use-phantom-wallet"
 import { AGENT_PERSONAS } from "@/lib/agent-personas"
-import { ArrowLeft, MessageSquare, RefreshCw, Shield, TrendingUp, Wallet, Zap } from "lucide-react"
+import { ArrowLeft, MessageSquare, RefreshCw, Shield, TrendingUp, Wallet, Zap, Sparkles } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 import TwitterIcon from "@/scr/logoSocial/twitter.jpg"
 
 interface Token {
@@ -417,26 +419,30 @@ export default function ChatPage() {
 
           <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
             <aside className="space-y-6">
-              <Card className="border-border/50 bg-black/60 p-5 backdrop-blur-xl">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Connected Agent</p>
-                    <h2 className="text-xl font-semibold">{selectedAgent?.name}</h2>
+              <Card className="border-border/50 bg-black/60 p-5 backdrop-blur-xl relative overflow-hidden group">
+                {/* Gradient glow effect */}
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 opacity-0 blur-lg transition-opacity duration-500 group-hover:opacity-20" />
+                
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Connected Agent</p>
+                      <h2 className="text-xl font-semibold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
+                        {selectedAgent?.name}
+                      </h2>
+                    </div>
+                    <StatusBadge status="operational" text="Live" showPulse={true} />
                   </div>
-                  <Badge variant="secondary" className="gap-1">
-                    <MessageSquare className="h-3 w-3" />
-                    Live
-                  </Badge>
-                </div>
-                <p className="mt-1.5 text-sm text-white/80">{selectedAgent?.tagline}</p>
-                <div className="mt-2 grid gap-1 text-xs text-white/70">
-                  <div className="flex items-center gap-2">
-                    <Shield className="h-3 w-3 text-primary" />
-                    <span>{selectedAgent?.tone}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="h-3 w-3 text-chart-3" />
-                    <span>{selectedAgent?.strategy}</span>
+                  <p className="mt-1.5 text-sm text-white/80">{selectedAgent?.tagline}</p>
+                  <div className="mt-3 grid gap-2 text-xs text-white/70">
+                    <div className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2 ring-1 ring-white/10">
+                      <Shield className="h-3 w-3 text-primary" />
+                      <span>{selectedAgent?.tone}</span>
+                    </div>
+                    <div className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2 ring-1 ring-white/10">
+                      <TrendingUp className="h-3 w-3 text-emerald-400" />
+                      <span>{selectedAgent?.strategy}</span>
+                    </div>
                   </div>
                 </div>
               </Card>
@@ -476,20 +482,29 @@ export default function ChatPage() {
               </Card>
 
               <div className="space-y-3">
-                {AGENT_PERSONAS.map((agent) => {
+                {AGENT_PERSONAS.map((agent, index) => {
                   const isActive = agent.id === selectedAgentId
                   return (
-                    <button
+                    <motion.button
                       key={agent.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      whileHover={{ scale: 1.02, x: 4 }}
                       onClick={() => setSelectedAgentId(agent.id)}
-                      className={`w-full rounded-2xl border px-4 py-4 text-left transition ${
+                      className={`group relative w-full overflow-hidden rounded-2xl border px-4 py-4 text-left transition-all ${
                         isActive
                           ? "border-primary/60 bg-primary/10"
                           : "border-border/40 bg-black/40 hover:border-primary/40"
                       }`}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="relative h-12 w-12 overflow-hidden rounded-full border border-border/30">
+                      {/* Glow effect on active */}
+                      {isActive && (
+                        <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 opacity-30 blur-xl" />
+                      )}
+                      
+                      <div className="relative z-10 flex items-center gap-3">
+                        <div className="relative h-12 w-12 overflow-hidden rounded-full border border-border/30 ring-2 ring-white/10">
                           <Image
                             src={agent.avatar}
                             alt={agent.name}
@@ -511,7 +526,7 @@ export default function ChatPage() {
                           <p className="mt-1 text-xs text-white/70">{agent.description}</p>
                         </div>
                       </div>
-                    </button>
+                    </motion.button>
                   )
                 })}
               </div>
@@ -530,22 +545,35 @@ export default function ChatPage() {
 
                 <div ref={chatContainerRef} className="flex-1 overflow-y-auto px-6 py-6 scrollbar-dark">
                   <div className="space-y-6">
-                    {activeConversation.map((message) => {
+                    {activeConversation.map((message, index) => {
                       const isUser = message.role === "user"
                       return (
-                        <div key={message.id} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-                          <div
-                            className={`max-w-[75%] rounded-2xl border px-4 py-3 text-sm leading-relaxed shadow-lg transition ${
+                        <motion.div
+                          key={message.id}
+                          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          transition={{ duration: 0.3, delay: index * 0.05 }}
+                          className={`flex ${isUser ? "justify-end" : "justify-start"}`}
+                        >
+                          <motion.div
+                            whileHover={{ scale: 1.02 }}
+                            className={`max-w-[75%] rounded-2xl border px-4 py-3 text-sm leading-relaxed shadow-lg transition-all ${
                               isUser
-                                ? "border-primary/40 bg-primary/30 text-white"
-                                : "border-border/40 bg-black/70 text-white/80"
+                                ? "border-primary/40 bg-gradient-to-br from-violet-600/30 to-fuchsia-600/30 text-white backdrop-blur-xl"
+                                : "border-border/40 bg-black/70 text-white/80 backdrop-blur-xl"
                             }`}
                           >
                             {!isUser && (
-                              <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-wide text-white/60">
-                                <span>{selectedAgent?.emoji}</span>
+                              <motion.div
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.1 }}
+                                className="mb-2 flex items-center gap-2 text-xs uppercase tracking-wide text-white/60"
+                              >
+                                <span className="text-base">{selectedAgent?.emoji}</span>
                                 <span>{selectedAgent?.name}</span>
-                              </div>
+                                <Sparkles className="h-3 w-3 text-violet-400" />
+                              </motion.div>
                             )}
                             <div className="space-y-2 text-sm leading-relaxed">{renderMessageContent(message.content)}</div>
                             <span className="mt-2 block text-right text-[10px] uppercase tracking-wide text-muted-foreground">
@@ -553,18 +581,38 @@ export default function ChatPage() {
                                 ? new Date(message.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
                                 : ""}
                             </span>
-                          </div>
-                        </div>
+                          </motion.div>
+                        </motion.div>
                       )
                     })}
-                    {isSending && (
-                      <div className="flex justify-start">
-                        <div className="flex items-center gap-2 rounded-full border border-border/40 bg-black/70 px-4 py-2 text-xs text-muted-foreground">
-                          <Zap className="h-3 w-3 animate-pulse text-primary" />
-                          Agent is typing...
-                        </div>
-                      </div>
-                    )}
+                    <AnimatePresence>
+                      {isSending && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="flex justify-start"
+                        >
+                          <div className="flex items-center gap-2 rounded-full border border-border/40 bg-black/70 px-4 py-2 text-xs text-muted-foreground backdrop-blur-xl">
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            >
+                              <Sparkles className="h-3 w-3 text-violet-400" />
+                            </motion.div>
+                            <span className="flex gap-1">
+                              Agent is thinking
+                              <motion.span
+                                animate={{ opacity: [0, 1, 0] }}
+                                transition={{ duration: 1.5, repeat: Infinity }}
+                              >
+                                ...
+                              </motion.span>
+                            </span>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
 

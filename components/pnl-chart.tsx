@@ -58,6 +58,7 @@ export function PNLChart({ walletAddress, currentTokens }: PNLChartProps) {
   const [data, setData] = useState<PNLDataPoint[]>([])
   const [events, setEvents] = useState<PNLEvent[]>([])
   const [stats, setStats] = useState<PNLStats | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   // Загрузка данных из API
   useEffect(() => {
@@ -68,6 +69,7 @@ export function PNLChart({ walletAddress, currentTokens }: PNLChartProps) {
 
   const loadPNLData = async () => {
     setLoading(true)
+    setError(null)
     try {
       const response = await fetch("/api/pnl", {
         method: "POST",
@@ -79,19 +81,30 @@ export function PNLChart({ walletAddress, currentTokens }: PNLChartProps) {
         }),
       })
 
-      if (!response.ok) {
-        throw new Error("Failed to load PNL data")
-      }
-
       const result = await response.json()
       
+      if (!response.ok) {
+        if (result.error === "Helius API key not configured") {
+          setError("⚠️ API key not configured. Please add HELIUS_API_KEY to .env.local file.")
+        } else {
+          setError(result.message || "Failed to load PNL data")
+        }
+        setData([])
+        setEvents([])
+        setStats(null)
+        return
+      }
+
       if (result.success) {
         setData(result.data.timeline || [])
         setEvents(result.data.events || [])
         setStats(result.data.stats || null)
+        if ((result.data.timeline || []).length === 0) {
+          setError("No transactions found in this time range")
+        }
       }
-    } catch (_error) {
-      // Показываем пустой график
+    } catch (err: any) {
+      setError(err.message || "Network error")
       setData([])
       setEvents([])
       setStats(null)
@@ -259,7 +272,7 @@ export function PNLChart({ walletAddress, currentTokens }: PNLChartProps) {
         </div>
 
         {/* Chart */}
-        <div className="h-[300px]">
+        <div className="h-[300px] w-full relative">
           {loading ? (
             <div className="h-full flex items-center justify-center">
               <div className="text-center space-y-3">
@@ -270,12 +283,18 @@ export function PNLChart({ walletAddress, currentTokens }: PNLChartProps) {
           ) : data.length === 0 ? (
             <div className="h-full flex items-center justify-center">
               <div className="text-center space-y-2">
-                <p className="text-sm text-muted-foreground">No transaction data available</p>
-                <p className="text-xs text-muted-foreground">Try selecting a different time range</p>
+                {error ? (
+                  <p className="text-sm text-yellow-500">{error}</p>
+                ) : (
+                  <>
+                    <p className="text-sm text-muted-foreground">No transaction data available</p>
+                    <p className="text-xs text-muted-foreground">Try selecting a different time range</p>
+                  </>
+                )}
               </div>
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={300}>
               <ComposedChart data={data}>
               <defs>
                 <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">

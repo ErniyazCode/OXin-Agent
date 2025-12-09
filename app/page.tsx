@@ -7,13 +7,17 @@ import { Card } from "@/components/ui/card"
 import { RainbowButton } from "@/components/ui/rainbow-button"
 import { ShinyButton } from "@/components/ui/shiny-button"
 import { Timeline, type TimelineEntry } from "@/components/ui/timeline"
-import { ArrowRight, Shield, TrendingUp, Wallet, Zap, BarChart3, Circle, Brain } from "lucide-react"
-import { motion } from "framer-motion"
+import { ArrowRight, Shield, TrendingUp, Wallet, Zap, BarChart3, Circle, Brain, Sparkles, Activity } from "lucide-react"
+import { motion, useInView } from "framer-motion"
 import { GradientButton } from "@/components/ui/gradient-button"
 import { GradientBlur } from "@/components/ui/gradient-blur"
 import { GlowingEffect } from "@/components/ui/glowing-effect"
+import { AnimatedCounter } from "@/components/ui/animated-counter"
+import { FloatingParticles, PulseDots } from "@/components/ui/micro-animations"
+import TokenSniperGlobe from "@/components/ui/token-sniper-globe"
 import Image from "next/image"
 import TwitterIcon from "@/scr/logoSocial/twitter.jpg"
+import { useRef } from "react"
 
 function ElegantShape({
   className,
@@ -646,6 +650,94 @@ export default function LandingPage() {
         </div>
 
   <div className="absolute inset-0 bg-linear-to-t from-[#030303] via-transparent to-[#030303]/80 pointer-events-none" />
+        {/* Smooth fade to next section */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-b from-transparent to-black/80 pointer-events-none" />
+      </section>
+
+      {/* Token Sniper Globe 3D Section */}
+      <section className="relative py-32 overflow-hidden bg-black">
+        {/* Smooth fade from previous section */}
+        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/80 to-transparent pointer-events-none z-20" />
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 via-transparent to-cyan-500/5" />
+        <FloatingParticles count={40} size="lg" color="bg-gradient-to-br from-emerald-500/10 to-cyan-500/10" />
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-16 space-y-4"
+          >
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-4 py-2 ring-1 ring-emerald-400/20 mb-6"
+            >
+              <Shield className="h-4 w-4 text-emerald-400 animate-pulse" />
+              <span className="text-sm font-medium text-emerald-200 tracking-widest">REAL-TIME THREAT DETECTION</span>
+            </motion.div>
+            <motion.h2 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-4xl md:text-6xl font-bold mb-4"
+            >
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-cyan-300 to-emerald-400 bg-[length:200%_auto] animate-gradient">
+                Token Sniper Dashboard
+              </span>
+            </motion.h2>
+            <p className="text-xl text-white/60 max-w-3xl mx-auto leading-relaxed">
+              Live 3D visualization of token scans across Solana. Watch real-time alerts, threat detection, and security analysis as they happen.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1, delay: 0.2 }}
+            className="max-w-6xl mx-auto"
+          >
+            <TokenSniperGlobe />
+          </motion.div>
+          
+          {/* Feature highlights below globe */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 max-w-5xl mx-auto"
+          >
+            {[
+              { icon: Shield, title: "Rug Detection", desc: "AI identifies suspicious patterns" },
+              { icon: Zap, title: "Instant Alerts", desc: "Real-time notifications on threats" },
+              { icon: Activity, title: "24/7 Monitoring", desc: "Continuous Solana network scanning" }
+            ].map((feature, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.5 + i * 0.1 }}
+                className="group relative"
+              >
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-600 to-cyan-600 rounded-2xl opacity-0 group-hover:opacity-20 blur transition-opacity duration-500" />
+                <div className="relative bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:border-emerald-400/30 transition-all">
+                  <feature.icon className="h-8 w-8 text-emerald-400 mb-3" />
+                  <h3 className="text-lg font-bold text-white mb-2">{feature.title}</h3>
+                  <p className="text-sm text-white/60">{feature.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+        {/* Smooth fade to next section */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-b from-transparent to-[#050505]/80 pointer-events-none z-20" />
       </section>
 
       <motion.section
@@ -658,21 +750,44 @@ export default function LandingPage() {
       >
   <div className="absolute inset-0 bg-linear-to-br from-white/5 via-transparent to-white/5" />
 
+        {/* Floating particles background */}
+        <FloatingParticles count={30} size="md" speed="slow" />
+        
         <div className="relative z-10 container mx-auto px-4">
-          <div className="max-w-3xl mb-12 space-y-4">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.3em] text-white/70">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(16,255,203,0.6)]" />
-              {"Live Simulation"}
-            </span>
-            <h2 className="text-4xl md:text-5xl font-bold text-balance">
-              {"Real-Time Intelligence in Motion"}
-            </h2>
-            <p className="text-lg md:text-xl text-white/70 max-w-2xl">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="max-w-3xl mb-12 space-y-4"
+          >
+            <motion.span 
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-emerald-200 ring-1 ring-emerald-400/10"
+            >
+              <PulseDots count={3} color="bg-emerald-400" size={2} />
+              <Sparkles className="h-3 w-3" />
+              {"Live AI Simulation"}
+            </motion.span>
+            <motion.h2 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-4xl md:text-6xl font-bold text-balance"
+            >
+              <span className="bg-gradient-to-r from-white via-emerald-200 to-white bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+                {"Real-Time Intelligence in Motion"}
+              </span>
+            </motion.h2>
+            <p className="text-lg md:text-xl text-white/70 max-w-2xl leading-relaxed">
               {
                 "Watch OXin Core orchestrate a live portfolio check-in, surfacing insights and safeguards before you ever hit confirm."
               }
             </p>
-          </div>
+          </motion.div>
 
           <div className="grid gap-8 lg:grid-cols-[1.7fr_1fr]">
             <div className="relative rounded-3xl border border-white/8 bg-white/5 backdrop-blur-xl p-6 md:p-8">
@@ -1066,43 +1181,219 @@ export default function LandingPage() {
         </div>
       </motion.section>
 
-      {/* CTA Section */}
-      <section className="container relative mx-auto px-4 py-20">
+      {/* Stats Section with CTA */}
+      <section className="relative py-32 pb-40 overflow-hidden bg-black">
+        {/* REDUCED ROTATING GRADIENT - Contained */}
         <motion.div
-          className="pointer-events-none absolute inset-0 -z-10"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          animate={{ opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 12, repeat: Number.POSITIVE_INFINITY, repeatType: "mirror" }}
-        >
+          className="absolute -inset-4 bg-gradient-to-r from-violet-600/20 via-fuchsia-600/20 to-cyan-600/20 opacity-60"
+          animate={{
+            rotate: [0, 360],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "linear",
+          }}
+          style={{ 
+            transformOrigin: "center center",
+            filter: "blur(40px)"
+          }}
+        />
+        
+        {/* Background effects */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black via-violet-950/20 to-black" />
+        
+        <div className="container mx-auto px-4 relative z-10">
           <motion.div
-            className="absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-linear-to-br from-emerald-400/15 via-transparent to-cyan-500/20 blur-[140px]"
-            animate={{ rotate: [0, 25, -15, 0] }}
-            transition={{ duration: 22, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-          />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 60, scale: 0.96 }}
-          whileInView={{ opacity: 1, y: 0, scale: 1 }}
-          viewport={{ once: true, amount: 0.4 }}
-          transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] as const }}
-        >
-          <Card className="p-1 bg-linear-to-br from-primary/30 to-secondary/30 border-primary/40 max-w-4xl mx-auto shadow-[0_40px_80px_rgba(15,23,42,0.45)]">
-            <div className="bg-card rounded-lg p-12 text-center space-y-6">
-            <h2 className="text-4xl md:text-5xl font-bold text-balance">{"Ready to Optimize Your Portfolio?"}</h2>
-            <p className="text-xl text-muted-foreground text-pretty max-w-2xl mx-auto">
-              {"Join thousands of crypto investors using AI to make smarter decisions"}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-16"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="inline-flex items-center gap-2 rounded-full bg-violet-500/10 px-4 py-2 ring-1 ring-violet-400/20 mb-6"
+            >
+              <Shield className="h-4 w-4 text-violet-400" />
+              <span className="text-sm font-medium text-violet-200">PROVEN TRACK RECORD</span>
+            </motion.div>
+            <motion.h2 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-4xl md:text-6xl font-bold mb-4"
+            >
+              <span className="bg-gradient-to-r from-violet-400 via-fuchsia-300 to-violet-400 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+                Trusted by DeFi Professionals
+              </span>
+            </motion.h2>
+            <p className="text-xl text-white/60 max-w-2xl mx-auto">
+              Real-time intelligence powering smarter trading decisions
             </p>
-            <Link href="/analyze" className="inline-flex">
-              <ShinyButton className="px-10 text-base">
-                <span>{"Get Started Free"}</span>
-                <ArrowRight className="w-5 h-5" />
-              </ShinyButton>
-            </Link>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <motion.div
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0 }}
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="relative group"
+            >
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-3xl opacity-0 group-hover:opacity-30 blur-xl transition-opacity duration-500" />
+              <div className="relative rounded-3xl border border-white/10 bg-black/40 backdrop-blur-xl p-8 text-center">
+                <div className="mb-4 flex justify-center">
+                  <div className="rounded-2xl bg-violet-500/10 p-4 ring-1 ring-violet-400/20">
+                    <TrendingUp className="h-6 w-6 text-violet-400" />
+                  </div>
+                </div>
+                <div className="text-5xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent mb-2">
+                  <AnimatedCounter value={12400} decimals={0} />+
+                </div>
+                <div className="text-white/60 font-medium">Portfolios Analyzed</div>
+              </div>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="relative group"
+            >
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-3xl opacity-0 group-hover:opacity-30 blur-xl transition-opacity duration-500" />
+              <div className="relative rounded-3xl border border-white/10 bg-black/40 backdrop-blur-xl p-8 text-center">
+                <div className="mb-4 flex justify-center">
+                  <div className="rounded-2xl bg-emerald-500/10 p-4 ring-1 ring-emerald-400/20">
+                    <Shield className="h-6 w-6 text-emerald-400" />
+                  </div>
+                </div>
+                <div className="text-5xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent mb-2">
+                  <AnimatedCounter value={847} decimals={0} />
+                </div>
+                <div className="text-white/60 font-medium">Risk Alerts Prevented</div>
+              </div>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="relative group"
+            >
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-600 to-orange-600 rounded-3xl opacity-0 group-hover:opacity-30 blur-xl transition-opacity duration-500" />
+              <div className="relative rounded-3xl border border-white/10 bg-black/40 backdrop-blur-xl p-8 text-center">
+                <div className="mb-4 flex justify-center">
+                  <div className="rounded-2xl bg-amber-500/10 p-4 ring-1 ring-amber-400/20">
+                    <BarChart3 className="h-6 w-6 text-amber-400" />
+                  </div>
+                </div>
+                <div className="text-5xl font-bold bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent mb-2">
+                  +<AnimatedCounter value={23.5} decimals={1} />%
+                </div>
+                <div className="text-white/60 font-medium">Avg. Yield Optimized</div>
+              </div>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="relative group"
+            >
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-3xl opacity-0 group-hover:opacity-30 blur-xl transition-opacity duration-500" />
+              <div className="relative rounded-3xl border border-white/10 bg-black/40 backdrop-blur-xl p-8 text-center">
+                <div className="mb-4 flex justify-center">
+                  <div className="rounded-2xl bg-cyan-500/10 p-4 ring-1 ring-cyan-400/20">
+                    <Wallet className="h-6 w-6 text-cyan-400" />
+                  </div>
+                </div>
+                <div className="text-5xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent mb-2">
+                  $<AnimatedCounter value={50} decimals={0} />M+
+                </div>
+                <div className="text-white/60 font-medium">Total Value Secured</div>
+              </div>
+            </motion.div>
           </div>
-          </Card>
-        </motion.div>
+
+          {/* CTA Block - Integrated */}
+          <motion.div
+            initial={{ opacity: 0, y: 60, scale: 0.96 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] as const, delay: 0.3 }}
+            className="mt-32 max-w-4xl mx-auto"
+          >
+            <Card className="relative bg-black/40 backdrop-blur-2xl border-white/20 p-12 text-center space-y-6 overflow-visible shadow-2xl">
+              {/* Inner glow */}
+              <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 via-fuchsia-500/5 to-cyan-500/5 rounded-3xl" />
+              
+              <div className="relative z-10 space-y-6">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <h2 className="text-4xl md:text-5xl font-bold text-balance bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">
+                    {"Ready to Optimize Your Portfolio?"}
+                  </h2>
+                </motion.div>
+                
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.5 }}
+                  className="text-xl text-white/70 text-pretty max-w-2xl mx-auto"
+                >
+                  {"Join thousands of crypto investors using AI to make smarter decisions"}
+                </motion.p>
+                
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.6 }}
+                >
+                  <Link href="/analyze" className="inline-flex">
+                    <ShinyButton className="px-10 text-base group">
+                      <span>{"Get Started Free"}</span>
+                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </ShinyButton>
+                  </Link>
+                </motion.div>
+                
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.7 }}
+                  className="flex items-center justify-center gap-6 text-sm text-white/50"
+                >
+                  <span className="flex items-center gap-2">
+                    <Circle className="h-1.5 w-1.5 fill-emerald-400 text-emerald-400" />
+                    No credit card required
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <Circle className="h-1.5 w-1.5 fill-emerald-400 text-emerald-400" />
+                    Free forever
+                  </span>
+                </motion.div>
+              </div>
+            </Card>
+          </motion.div>
+        </div>
       </section>
 
       {/* Footer */}

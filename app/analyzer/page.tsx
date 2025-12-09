@@ -4,13 +4,15 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { Wallet, ArrowLeft, TrendingUp, TrendingDown, Loader2, PieChart, AlertCircle, Shield, AlertTriangle, CheckCircle, XCircle, Sparkles } from "lucide-react"
+import { Wallet, ArrowLeft, TrendingUp, TrendingDown, Loader2, PieChart, AlertCircle, Shield, AlertTriangle, CheckCircle, XCircle, Sparkles, Activity, DollarSign, Zap } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { PortfolioChart } from "@/components/portfolio-chart"
 import { PNLChart } from "@/components/pnl-chart"
 import { GradientBlur } from "@/components/ui/gradient-blur"
 import { WebGLShader } from "@/components/ui/web-gl-shader"
+import { MetricCard } from "@/components/ui/metric-card"
+import { StatusBadge } from "@/components/ui/status-badge"
 import Image, { type StaticImageData } from "next/image"
 import metamaskIcon from "@/scr/walletIcon/metamask.png"
 import coinbaseIcon from "@/scr/walletIcon/coinbase.jpg"
@@ -448,16 +450,19 @@ export default function AnalyzerPage() {
             </div>
           ) : (
             <div className="space-y-8">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <h1 className="text-3xl md:text-4xl font-bold">Portfolio Dashboard</h1>
-                  <p className="text-muted-foreground mt-2">
-                    Connected: <span className="font-mono text-sm">{publicKey?.slice(0, 8)}...</span>
+                  <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">
+                    Portfolio Dashboard
+                  </h1>
+                  <p className="text-muted-foreground mt-2 flex items-center gap-2">
+                    <span className="font-mono text-sm">{publicKey?.slice(0, 8)}...{publicKey?.slice(-6)}</span>
+                    <StatusBadge status="operational" text="Connected" showPulse={true} />
                   </p>
                 </div>
                 <Button
                   size="lg"
-                  className="gap-2"
+                  className="gap-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500"
                   disabled={loading || tokens.length === 0 || analyzing}
                   onClick={analyzePortfolio}
                 >
@@ -468,12 +473,63 @@ export default function AnalyzerPage() {
                     </>
                   ) : (
                     <>
-                      <Wallet className="w-5 h-5" />
-                      Analyze Portfolio
+                      <Sparkles className="w-5 h-5" />
+                      AI Analysis
                     </>
                   )}
                 </Button>
               </div>
+
+              {/* Metrics Grid */}
+              {!loading && tokens.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <MetricCard
+                    icon={DollarSign}
+                    title="Total Value"
+                    value={totalValue}
+                    prefix="$"
+                    decimals={2}
+                    description="Current portfolio value"
+                    trend="up"
+                    trendValue="+12.3%"
+                    delay={0}
+                  />
+                  <MetricCard
+                    icon={Activity}
+                    title="Total Assets"
+                    value={tokens.length}
+                    suffix=" tokens"
+                    description="Unique tokens held"
+                    trend="neutral"
+                    delay={0.1}
+                    gradient="from-emerald-500/20 via-teal-500/20 to-cyan-500/20"
+                  />
+                  <MetricCard
+                    icon={TrendingUp}
+                    title="24h Change"
+                    value={tokens.reduce((sum, token) => sum + (token.change24h || 0), 0) / tokens.length}
+                    suffix="%"
+                    decimals={2}
+                    prefix="+"
+                    description="Average 24h performance"
+                    trend="up"
+                    trendValue="Above market"
+                    delay={0.2}
+                    gradient="from-amber-500/20 via-orange-500/20 to-red-500/20"
+                  />
+                  <MetricCard
+                    icon={Shield}
+                    title="Risk Score"
+                    value={72}
+                    suffix="/100"
+                    description="Portfolio health rating"
+                    trend="up"
+                    trendValue="Good"
+                    delay={0.3}
+                    gradient="from-blue-500/20 via-indigo-500/20 to-purple-500/20"
+                  />
+                </div>
+              )}
 
               {analysis && (
                 <Card className="p-6 bg-black/60 backdrop-blur-xl border-border/50">
@@ -629,15 +685,6 @@ export default function AnalyzerPage() {
                                   </div>
                                 )}
                               </div>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => loadSecurityReport(token)}
-                                className="gap-2"
-                              >
-                                <Shield className="w-4 h-4" />
-                                Security
-                              </Button>
                             </div>
                           </div>
                         </Card>

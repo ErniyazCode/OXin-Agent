@@ -151,7 +151,7 @@ export async function POST(request: Request) {
     transactions.sort((a, b) => a.timestamp - b.timestamp)
 
     // Шаг 3: Построить timeline портфеля (передаем текущие токены для расчета стоимости)
-    const timeline = await buildPortfolioTimeline(transactions, startTime, now, currentTokens || [])
+    const timeline = await buildPortfolioTimeline(transactions, startTime, now, currentTokens || [], timeRange)
     
     // Шаг 4: Извлечь события (точки на графике)
     const events = extractEvents(transactions)
@@ -185,9 +185,9 @@ const priceCache = new Map<string, number>()
  * Использует Birdeye для точных данных, DexScreener как fallback
  */
 async function getHistoricalPrice(tokenMint: string, timestamp: number): Promise<number> {
-  // Проверяем кэш (округляем timestamp до дня для кэширования)
-  const dayTimestamp = Math.floor(timestamp / 86400) * 86400
-  const cacheKey = `${tokenMint}-${dayTimestamp}`
+  // Проверяем кэш (округляем timestamp до часа для более точного кэша)
+  const hourTimestamp = Math.floor(timestamp / 3600) * 3600
+  const cacheKey = `${tokenMint}-${hourTimestamp}`
   
   if (priceCache.has(cacheKey)) {
     return priceCache.get(cacheKey)!
@@ -196,10 +196,55 @@ async function getHistoricalPrice(tokenMint: string, timestamp: number): Promise
   try {
     let price = 0
 
-    // СТРАТЕГИЯ 1: Birdeye OHLCV (самые точные исторические данные)
-    if (process.env.BIRDEYE_API_KEY) {
-      const timeFrom = timestamp - 86400 // -1 день
-      const timeTo = timestamp + 86400 // +1 день
+    // СТРАТЕГИЯ 1: Jupiter Price API (real-time, очень быстрый)
+    // Для недавних цен (последние 7 дней) используем текущую цену
+    const daysSinceTimestamp = (Date.now() / 1000 - timestamp) / 86400
+    
+    if (daysSinceTimestamp < 7) {
+      try {
+        const jupiterResponse = await fetch(
+          `https://price.jup.ag/v6/price?ids=${tokenMint}`,
+          { next: { revalidate: 60 } }
+        )
+        
+        if (jupiterResponse.ok) {
+          const jupiterData = await jupiterResponse.json()
+          if (jupiterData.data && jupiterData.data[tokenMint]) {
+            price = jupiterData.data[tokenMint].price || 0
+            
+            if (price > 0) {
+              priceCache.set(cacheKey, price)
+              return price
+            }
+          }
+        }
+      } catch (_error) {}
+    }
+
+    // СТРАТЕГИЯ 2: DexScreener (fallback для всех токенов)
+    try {
+      const dexResponse = await fetch(
+        `https://api.dexscreener.com/latest/dex/tokens/${tokenMint}`,
+        { next: { revalidate: 3600 } }
+      )
+      
+      if (dexResponse.ok) {
+        const dexData = await dexResponse.json()
+        if (dexData.pairs && dexData.pairs.length > 0) {
+          price = parseFloat(dexData.pairs[0].priceUsd) || 0
+          
+          if (price > 0) {
+            priceCache.set(cacheKey, price)
+            return price
+          }
+        }
+      }
+    } catch (_error) {}
+
+    // СТРАТЕГИЯ 3: Birdeye (если есть ключ и нужна историческая цена)
+    if (process.env.BIRDEYE_API_KEY && daysSinceTimestamp >= 7) {
+      const timeFrom = timestamp - 86400
+      const timeTo = timestamp + 86400
       
       try {
         const birdeyeResponse = await fetch(
@@ -214,9 +259,8 @@ async function getHistoricalPrice(tokenMint: string, timestamp: number): Promise
         if (birdeyeResponse.ok) {
           const birdeyeData = await birdeyeResponse.json()
           if (birdeyeData.data?.items && birdeyeData.data.items.length > 0) {
-            // Берем ближайшую свечу
             const candle = birdeyeData.data.items[0]
-            price = candle.c || candle.o || 0 // close или open price
+            price = candle.c || candle.o || 0
             
             if (price > 0) {
               priceCache.set(cacheKey, price)
@@ -224,28 +268,8 @@ async function getHistoricalPrice(tokenMint: string, timestamp: number): Promise
             }
           }
         }
-  } catch (_error) {}
+      } catch (_error) {}
     }
-
-    // СТРАТЕГИЯ 2: DexScreener (текущая цена как fallback)
-    try {
-      const dexResponse = await fetch(
-        `https://api.dexscreener.com/latest/dex/tokens/${tokenMint}`,
-        { next: { revalidate: 3600 } } // Cache for 1 hour
-      )
-      
-      if (dexResponse.ok) {
-        const dexData = await dexResponse.json()
-        if (dexData.pairs && dexData.pairs.length > 0) {
-          price = parseFloat(dexData.pairs[0].priceUsd) || 0
-          
-          if (price > 0) {
-            priceCache.set(cacheKey, price)
-            return price
-          }
-        }
-      }
-  } catch (_error) {}
 
     // Сохраняем 0 в кэш чтобы не повторять неудачные запросы
     priceCache.set(cacheKey, 0)
@@ -313,20 +337,35 @@ async function parseTransaction(tx: any, walletAddress: string): Promise<Transac
     const hasIncomingTokens = tokens.some((t) => t.direction === "IN")
     const hasOutgoingTokens = tokens.some((t) => t.direction === "OUT")
 
-    if (Math.abs(solChange) > 1e-8) {
+    // 1. Проверяем SWAP транзакции (приоритет)
+    if (rawType === "SWAP" || (hasIncomingTokens && hasOutgoingTokens)) {
+      // Если есть исходящий стейбл или SOL - это BUY
+      const hasOutgoingStable = tokens.some((t) => t.direction === "OUT" && STABLE_MINTS.has(t.mint))
+      const hasOutgoingSol = solChange < 0
+      
+      // Если есть входящий стейбл или SOL - это SELL
+      const hasIncomingStable = tokens.some((t) => t.direction === "IN" && STABLE_MINTS.has(t.mint))
+      const hasIncomingSol = solChange > 0
+      
+      if (hasOutgoingStable || hasOutgoingSol) {
+        txType = "BUY"
+      } else if (hasIncomingStable || hasIncomingSol) {
+        txType = "SELL"
+      } else {
+        // Swap токен на токен - считаем как SELL старого
+        txType = "SELL"
+      }
+    }
+    // 2. Проверяем транзакции с изменением SOL
+    else if (Math.abs(solChange) > 1e-8) {
       if (solChange < 0) {
         txType = hasIncomingTokens ? "BUY" : "TRANSFER_OUT"
       } else {
         txType = hasOutgoingTokens ? "SELL" : "TRANSFER_IN"
       }
-    } else if (rawType === "SWAP") {
-      // На случай если swap происходил через стейблы
-      if (hasOutgoingTokens && hasIncomingTokens) {
-        // Если токены выходят и входят, определяем по стейблам
-        const hasOutgoingStable = tokens.some((t) => t.direction === "OUT" && STABLE_MINTS.has(t.mint))
-        txType = hasOutgoingStable ? "BUY" : "SELL"
-      }
-    } else {
+    }
+    // 3. Чистые переводы токенов
+    else {
       if (hasOutgoingTokens && !hasIncomingTokens) {
         txType = "TRANSFER_OUT"
       } else if (hasIncomingTokens && !hasOutgoingTokens) {
@@ -390,22 +429,101 @@ async function buildPortfolioTimeline(
   transactions: Transaction[],
   startTime: number,
   endTime: number,
-  currentTokens: any[]
+  currentTokens: any[],
+  timeRange?: string
 ): Promise<PNLDataPoint[]> {
   const timeline: PNLDataPoint[] = []
   
-  // Если нет транзакций - возвращаем пустой timeline
+  // Если нет транзакций в выбранном периоде, но есть текущие токены - показываем текущий портфель
+  if (transactions.length === 0 && currentTokens.length > 0) {
+    // Строим timeline на основе ТЕКУЩИХ токенов и их change24h
+    let intervalSeconds = 86400
+    
+    if (timeRange === '24h') {
+      intervalSeconds = 3600 // Каждый час
+    } else if (timeRange === '7d') {
+      intervalSeconds = 21600 // Каждые 6 часов
+    } else if (timeRange === '30d') {
+      intervalSeconds = 86400 // Каждый день
+    } else {
+      intervalSeconds = 86400 * 7 // Каждую неделю
+    }
+    
+    const points = Math.ceil((endTime - startTime) / intervalSeconds)
+    
+    for (let i = 0; i <= points; i++) {
+      const pointTimestamp = startTime + i * intervalSeconds
+      const pointDate = new Date(pointTimestamp * 1000)
+      
+      // Рассчитываем прогресс от начала периода (0 = start, 1 = end)
+      const progress = i / points
+      
+      // Считаем стоимость портфеля на этой точке
+      let portfolioValue = 0
+      
+      // ДЛЯ КАЖДОГО ТОКЕНА считаем его цену в этой точке времени
+      for (const token of currentTokens) {
+        if (!token.balance || token.balance <= 0) continue
+        
+        const currentPrice = token.price || 0
+        if (currentPrice <= 0) continue
+        
+        // Берём change24h ЭТОГО токена (не всего портфеля!)
+        const change24hPercent = token.change24h || 0
+        
+        // Цена 24 часа назад = текущая цена / (1 + изменение%)
+        // Например: SOL сейчас $219, +6.28% → 24h назад = $219 / 1.0628 = $206
+        const price24hAgo = currentPrice / (1 + change24hPercent / 100)
+        
+        // Интерполируем цену между ценой 24h назад и текущей
+        // progress=0 → price24hAgo, progress=1 → currentPrice
+        const interpolatedPrice = price24hAgo + (currentPrice - price24hAgo) * progress
+        
+        // Считаем стоимость ЭТОГО токена в портфеле
+        portfolioValue += token.balance * interpolatedPrice
+      }
+      
+      const dateFormat = timeRange === '24h' 
+        ? pointDate.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+        : pointDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+      
+      timeline.push({
+        timestamp: pointTimestamp,
+        date: dateFormat,
+        portfolioValue,
+        pnl: 0,
+        pnlPercent: 0,
+      })
+    }
+    
+    // Рассчитываем PnL относительно первой точки
+    if (timeline.length > 0) {
+      const baselineValue = timeline[0].portfolioValue
+      for (const entry of timeline) {
+        entry.pnl = entry.portfolioValue - baselineValue
+        entry.pnlPercent = baselineValue > 0 ? (entry.pnl / baselineValue) * 100 : 0
+      }
+    }
+    
+    return timeline
+  }
+  
+  // Если нет транзакций вообще - возвращаем пустой timeline
   if (transactions.length === 0) {
     return timeline
   }
 
   // Найти дату первой покупки (не TRANSFER_IN!)
-  const firstBuyOrSell = transactions
+  let firstBuyOrSell = transactions
     .filter(tx => tx.type === "BUY" || tx.type === "SELL")
     .sort((a, b) => a.timestamp - b.timestamp)[0]
   
+  // Если нет BUY/SELL, используем любые транзакции для построения timeline
+  if (!firstBuyOrSell && transactions.length > 0) {
+    firstBuyOrSell = transactions[0]
+  }
+  
   if (!firstBuyOrSell) {
-    // Нет покупок/продаж - возвращаем пустой timeline
     return timeline
   }
 
